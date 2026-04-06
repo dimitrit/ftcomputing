@@ -1,0 +1,41 @@
+;
+; BTNTEST.A65 - A simple demo that displays the number of the button
+; pressed.
+;
+
+CURBTN		EQU $40
+PTR		EQU $41
+
+INH		EQU $F9			;
+POINTL		EQU $FA
+POINTH		EQU $FB
+
+SCANDS		EQU $1F1F		; Show hex values on LED disp
+
+		ORG $200
+
+		JSR FTINIT
+		LDA #0
+		STA INH
+		STA POINTL
+		STA POINTH
+START		LDA #E8			; Start with first button
+		STA CURBTN
+		LDA #7
+		STA PTR
+LOOP		JSR SCANDS
+		LDX CURBTN		; Get current button no.
+		JSR FTBINP		; Check status
+		TYA
+		BEQ NEXT		; If 0, button not pressed
+		LDA PTR
+		STA INH
+NEXT		CLC
+		ROR CURBTN
+		DEC PTR
+		BMI START
+		JMP LOOP
+
+		INCLUDE VIAIFDRV.A65	; Load driver
+
+		END

@@ -1,0 +1,28 @@
+;
+; SIMPLADC.A65 - A simple analog input demo that displays the values of
+; the variable resistors (0-5kOhm) connected to EX and EY.
+;
+
+INH		EQU $F9			;
+POINTL		EQU $FA
+POINTH		EQU $FB
+
+SCANDS		EQU $1F1F		; Show hex values on LED disp
+
+		ORG $200
+
+		LDA #0			; Set display to 00
+		STA INH
+		JSR FTINIT		; Initialise interface
+AGAIN		LDX #EX			; Get EX analog input
+		JSR FTBINP
+		STA POINTH		; Save the value
+		LDX #EY
+		JSR FTBINP
+		STA POINTL
+		JSR SCANDS		; Show on LED display
+		JMP AGAIN
+
+		INCLUDE VIAIFDRV.A65	; Load driver
+
+		END

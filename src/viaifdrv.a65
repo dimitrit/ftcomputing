@@ -1,0 +1,185 @@
+		;**************************************
+		; PAL-2 VIA Interface Driver Program
+		;**************************************
+		; This driver is based on the C64 driver
+		; Control of the fischertechnik Interface
+		; using the MS-BASIC SYS- and USR-commands
+		; for output and input, respectively.
+		;**************************************
+		; These routines require the ft interface to be
+		; connected to the PAL-2 VIA I/F as following:
+		;            LOAD_OUT  [8] --- PB0
+		;             LOAD_IN  [7] --- PB1
+		;            DATA_OUT [10] --- PB2
+		;                 CLK  [9] --- PB3
+		;           TRIGGER_X [11] --- PB4
+		;           TRIGGER_Y [12] --- PB5
+		;  CENTRONICS_DATA_IN [18] --- PB7
+		;            COUNT_IN  [4] --- PA6
+		;                 GND [20] --- GND
+		;              POTI_X [13] --- RC_X [15]
+		;              POTI_Y [14] --- RC_Y [16]
+		;
+		;
+		;**************************************
+		; Global definitions
+		;**************************************
+		GLOBAL FTINIT, FTBINP, FTBOUTP
+		;**************************************
+		; ft Interface control constants
+		;**************************************
+STOP		EQU %11111111
+CW		EQU %01010101
+CCW		EQU %10101010
+
+M1		EQU %00000011
+M2		EQU %00001100
+M3		EQU %00110000
+M4		EQU %11000000
+
+E1		EQU %00000001
+E2		EQU %00000010
+E3		EQU %00000100
+E4		EQU %00001000
+E5		EQU %00010000
+E6		EQU %00100000
+E7		EQU %01000000
+E8		EQU %10000000
+
+EX		EQU %10100000
+EY		EQU %10010000
+		;**************************************
+		; VIA 1 Input and output registers
+		;**************************************
+ORB		EQU $1600		;Output register B
+DDRB		EQU $1602		;Data direction reg B
+T2CL		EQU $1608 		;Timer 2 low register
+T2CH		EQU $1609 		;Timer 2 high register
+ACR		EQU $160B 		;Aux control register
+		;**************************************
+		; Variables in the zero page
+		;**************************************
+AVAR		EQU $D0 		;Output variable
+MASK		EQU $D1 		;Mask variable
+CNTR		EQU $D3			;Counter variable
+		;**************************************
+		; Routines for output control
+		; Call in using the SYS command
+		;**************************************
+		; Entry point for if initialisation
+		;**************************************
+		;SECTION text,"c"
+
+FTINIT:		SEI 			;Disable interrupt
+		LDA #$00 		;All motors off
+		BEQ FTSTVAR		;BRANCH ALWAYS
+		;**************************************
+		; Entry point for digital output
+		;**************************************
+FTBOUTP:	SEI			;Disable interrupt
+		STA MASK		;Save bit mask
+		LDA AVAR		;Get previous output
+		ORA MASK		;Set both bits
+		STA AVAR		;Intermediate storage
+		TXA
+		AND MASK		;Mask motor
+		STA MASK		;Intermediate storage
+		LDA AVAR		;Get output variable
+		EOR MASK		;Set bit (10, 01, 00)
+FTSTVAR:	STA AVAR		;Save for output
+		TAY			;Copy in Y-reg.
+		;**************************************
+		; Routine for interface control
+		; Output control
+		; Output bit pattern in AVAR
+		; Uses A- and X-registers
+		;**************************************
+		LDA #$3F		;Set data direction
+		STA DDRB		;Store in register
+		LDX #$08		;Loop for 8 bits
+.LOOP		LDA #$30		;static pattern RIOT
+		ASL AVAR 		;Test output bit
+		BCC .DOUT		;DATA-OUT low
+		ORA #$04		;DATA-OUT high
+.DOUT		STA ORB			;Output to RIOT
+		ORA #$08		;set CLOCK
+		STA ORB			;Output to RIOT
+		DEX			;Loop counter
+		BNE .LOOP		;end of LOOP
+		LDA #$39		;Set LOAD-OUT
+		STA ORB			;Output to RIOT
+		STY AVAR		;Restore AVAR
+		CLI			;Enable interrupt
+		RTS			;Return to caller
+		;**************************************
+		; Routines for interface input control
+		; Call in using SYS command
+		;**************************************
+		; Entry point for both digital and
+		; analog input
+		;**************************************
+FTBINP:		SEI			;Disable interrupt
+ 		CPX #$A0		;EX analog input?
+ 		BEQ .POTS		;Go to POTS
+ 		CPX #$90		;EY analog input?
+		BEQ .POTS		;Go to POTS
+ 		STX MASK		;Save input mask
+ 		;**************************************
+ 		; Interface Control
+ 		; for digital input
+ 		; Uses X- and Y-registers
+		; Result in Y-register
+ 		;**************************************
+		LDA #$32		;Set LOAD-IN
+		STA ORB			;Output to RIOT
+		ORA #$08		;Set CLOCK
+		STA ORB			;Output to RIOT
+		LDX #$08		;Loop counter for 8 bit
+.LOOP		ASL A			;Shift left A-reg.
+		BIT ORB			;Test DATA-IN
+		BPL .MAKEIN		;DATA-IN is low
+		ORA #$01		;DATA-IN is high
+.MAKEIN		LDY #$30		;Reset CLOCK
+		STY ORB			;Output to RIOT
+		LDY #$38		;Set CLOCK
+		STY ORB			;Output to RIOT
+		DEX			;Decrement loop counter
+		BNE .LOOP		;End of LOOP
+		AND MASK		;Mask bit
+ 		TAY			;Save in Y-register
+ 		BEQ .END		;Return 0
+ 		LDY #$01		;Return 1
+.END		CLI			;Enable interrupt
+		RTS			;Return to caller
+; 		;**************************************
+; 		; Analog input
+; 		; If the argument is either $90 or $A0
+; 		; an analog input is invoked. Control
+; 		; jumps here.
+; 		; Uses A-, X- and Y-registers
+		; Result in A- and Y-registers
+; 		;**************************************
+.POTS:		LDA #$FF		;Set Count register to $FFFF
+		STA T2CL
+		STA T2CH
+		LDA #%100000		;Set T2 to pulse count down
+		STA ACR
+		STX ORB			;Trigger One-shot
+		LDX #$3A		;Reset trigger
+		STX ORB			;Output to userport
+.TST		LDA T2CL		;Test timer low register
+		LDX #$03		;Delay loop
+.DELAY		DEX
+		BNE .DELAY
+		SEC			;Subtract timer low reg.
+		SBC T2CL		;from previous value.
+		BNE .TST		;Pulses still arriving?
+		LDX #$38		;Set CLOCK, reset LOAD-IN
+		STX ORB			;Output to userport
+		SEC 			;Calculate contents
+		LDA #$FF
+		SBC T2CH 		;High byte
+		TAY			;in Y register
+		LDA #$FF
+		SBC T2CL		;Low byte in A reg
+		RTS			;And done!

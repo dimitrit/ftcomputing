@@ -1,0 +1,110 @@
+; =============================================================
+;
+; FISCHERTECHNIK COMPUTING
+;
+; TEACH IN ROBOTER
+;
+; =============================================================
+; The robot can be controlled using six buttons, as following:
+;
+;	Arm Up		(E1)
+;	Arm Down	(E2)
+;	Turn Left	(E3)
+;	Turn Right	(E4)
+;	Magnet On	(E5)
+;	Magnet Off	(E6)
+;
+; The remaining two buttons are used to 'teach' the robot.
+; Pressing `Add Step' will add the current position of the
+; robot arm to the list of steps to be replayed.  Use the
+; `Start/Stop' button to replay all steps. The system will
+; repeat the steps until told to stop.
+;
+;	Add Step	(E7)
+;	Start/Stop	(E8)
+; =============================================================
+;
+		ORG $10
+
+CURBTN		BYTE 0			; Current button
+CURDIR		BYTE 0			; Current motor direction
+CURMTR		BYTE 0			; Current motor
+MAXLMT		BYTE 0			; Upper limit of movement
+MINLMT		BYTE 0			; Lower limit of movement
+IDX		BYTE 0			; Index
+POINTR		WORD 0			; Function pointer
+;		Function table
+FUNCTBL		WORD UP, DOWN, LEFT, RIGHT
+		WORD ON, OFF, STEP, REPLAY
+
+		ORG $200
+
+		JSR FTINIT		; Initialise FT interface
+START		LDA #E8			; Start with last button
+		STA CURBTN
+		LDA #7			; Initialise pointer
+		STA IDX
+MAINLP		LDX CURBTN		; Get current button no.
+		JSR FTBINP		; Check status
+		TYA
+		BEQ NEXT		; If 0, button not pressed
+		LDA IDX			; Get current pointer
+		ASL			; Multiply by 2
+		TAX
+		LDA FUNCTBL,X		; Get button function
+		STA POINTR		; and store in POINTR
+		LDA FUNCTBL+1,X
+		STA POINTR+1
+		JMP (POINTR)		; Go execute function
+NEXT		CLC
+		ROR CURBTN
+		DEC IDX
+		BMI START
+		JMP MAINLP
+
+UP		LDA #CW			; Select move arm up
+		STA CURDIR
+		LDA #M2			; Select arm motor
+		STA CURMTR
+		JMP MOVE		; Now move arm
+DOWN		LDA #CCW		; Select arm down
+		STA CURDIR
+		LDA #M2			; Select arm motor
+		STA CURMTR
+		JMP MOVE		; Now move arm
+LEFT		LDA #CW			; Select turn left
+		STA CURDIR
+		LDA #M1			; Select rotate motor
+		STA CURMTR
+		JMP MOVE		; Now rotate arm
+RIGHT		LDA #CCW		; Select turn right
+		STA CURDIR
+		LDA #M1			; Select rotate motor
+		STA CURMTR
+		JMP MOVE		; Now rotate arm
+ON		LDA #M3			; Select magnet
+		LDX #CW			; Select power on
+		BNE APPLY
+OFF		LDA #M3			; Select magnet
+		LDX #STOP		; Select power off
+APPLY		JSR FTBOUTP		; And apply
+		JMP START
+STEP		NOP
+REPLAY		NOP
+		JMP START		; REMOVE JUMP!
+;
+MOVE		LDA CURMTR		; Use current motor
+		LDX CURDIR		; Set direction
+		JSR FTBOUTP		; And apply
+		LDX CURBTN		; Is button still pressed?
+		JSR FTBINP
+		TYA
+		BNE MOVE		; Yes, continue move
+		LDA CURMTR		; Select current motor
+		LDX #STOP		; Select stop
+		JSR FTBOUTP		; And apply
+		JMP START		; And done
+
+		INCLUDE VIAIFDRV.A65	; Load driver
+
+		END
