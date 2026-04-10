@@ -149,8 +149,7 @@ FTBINP:		SEI			;Disable interrupt
  		TAY			;Save in Y-register
  		BEQ .END		;Return 0
  		LDY #$01		;Return 1
-.END		CLI			;Enable interrupt
-		RTS			;Return to caller
+		BNE .END		;Return to caller
 ; 		;**************************************
 ; 		; Analog input
 ; 		; If the argument is either $90 or $A0
@@ -182,4 +181,5 @@ FTBINP:		SEI			;Disable interrupt
 		TAY			;in Y register
 		LDA #$FF
 		SBC T2CL		;Low byte in A reg
-		RTS			;And done!
+.END		CLI			;Enable interrupts
+		RTS			;And return to caller
