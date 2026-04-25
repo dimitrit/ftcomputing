@@ -14,12 +14,11 @@
 		;                 CLK  [9] --- PB3
 		;           TRIGGER_X [11] --- PB4
 		;           TRIGGER_Y [12] --- PB5
-		;  CENTRONICS_DATA_IN [18] --- PB7
-		;            COUNT_IN  [4] --- PA6
+		;            COUNT_IN  [4] --- PB6
+		;  	  C64_DATA_IN [18] --- PB7
 		;                 GND [20] --- GND
 		;              POTI_X [13] --- RC_X [15]
 		;              POTI_Y [14] --- RC_Y [16]
-		;
 		;
 		;**************************************
 		; Global definitions
