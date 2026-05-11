@@ -21,54 +21,37 @@
 		;              POTI_Y [14] --- RC_Y [16]
 		;
 		;**************************************
+		;
+		;**************************************
+		.INCLUDE "FTCOMPUTING.INC"
+
+		;**************************************
 		; Global definitions
 		;**************************************
-		GLOBAL FTINIT, FTBINP, FTBOUTP
-		;**************************************
-		; ft Interface control constants
-		;**************************************
-STOP		EQU %11111111
-CW		EQU %01010101
-CCW		EQU %10101010
-
-M1		EQU %00000011
-M2		EQU %00001100
-M3		EQU %00110000
-M4		EQU %11000000
-
-E1		EQU %00000001
-E2		EQU %00000010
-E3		EQU %00000100
-E4		EQU %00001000
-E5		EQU %00010000
-E6		EQU %00100000
-E7		EQU %01000000
-E8		EQU %10000000
-
-EX		EQU %10100000
-EY		EQU %10010000
+		.EXPORT FTINIT, FTBOUTP, FTBINP
 		;**************************************
 		; VIA 1 Input and output registers
 		;**************************************
-ORB		EQU $1600		;Output register B
-DDRB		EQU $1602		;Data direction reg B
-T2CL		EQU $1608 		;Timer 2 low register
-T2CH		EQU $1609 		;Timer 2 high register
-ACR		EQU $160B 		;Aux control register
+ORB		= $1600			;Output register B
+DDRB		= $1602			;Data direction reg B
+T2CL		= $1608 		;Timer 2 low register
+T2CH		= $1609 		;Timer 2 high register
+ACR		= $160B 		;Aux control register
 		;**************************************
 		; Variables in the zero page
 		;**************************************
-AVAR		EQU $D0 		;Output variable
-MASK		EQU $D1 		;Mask variable
-CNTR		EQU $D3			;Counter variable
+		.SEGMENT "ZEROPAGE"
+AVAR:		.RES 1	 		;Output variable
+MASK:		.RES 1 			;Mask variable
+CNTR:		.RES 1			;Counter variable
 		;**************************************
 		; Routines for output control
 		; Call in using the SYS command
 		;**************************************
+		;**************************************
 		; Entry point for if initialisation
 		;**************************************
-		;SECTION text,"c"
-
+		.SEGMENT "CODE"
 FTINIT:		SEI 			;Disable interrupt
 		LDA #$00 		;All motors off
 		BEQ FTSTVAR		;BRANCH ALWAYS
@@ -96,15 +79,15 @@ FTSTVAR:	STA AVAR		;Save for output
 		LDA #$3F		;Set data direction
 		STA DDRB		;Store in register
 		LDX #$08		;Loop for 8 bits
-.LOOP		LDA #$30		;static pattern RIOT
+LOOP0:		LDA #$30		;static pattern RIOT
 		ASL AVAR 		;Test output bit
-		BCC .DOUT		;DATA-OUT low
+		BCC DOUT		;DATA-OUT low
 		ORA #$04		;DATA-OUT high
-.DOUT		STA ORB			;Output to RIOT
+DOUT:		STA ORB			;Output to RIOT
 		ORA #$08		;set CLOCK
 		STA ORB			;Output to RIOT
 		DEX			;Loop counter
-		BNE .LOOP		;end of LOOP
+		BNE LOOP0		;end of LOOP
 		LDA #$39		;Set LOAD-OUT
 		STA ORB			;Output to RIOT
 		STY AVAR		;Restore AVAR
@@ -119,9 +102,9 @@ FTSTVAR:	STA AVAR		;Save for output
 		;**************************************
 FTBINP:		SEI			;Disable interrupt
  		CPX #$A0		;EX analog input?
- 		BEQ .POTS		;Go to POTS
+ 		BEQ POTS		;Go to POTS
  		CPX #$90		;EY analog input?
-		BEQ .POTS		;Go to POTS
+		BEQ POTS		;Go to POTS
  		STX MASK		;Save input mask
  		;**************************************
  		; Interface Control
@@ -134,21 +117,21 @@ FTBINP:		SEI			;Disable interrupt
 		ORA #$08		;Set CLOCK
 		STA ORB			;Output to RIOT
 		LDX #$08		;Loop counter for 8 bit
-.LOOP		ASL A			;Shift left A-reg.
+LOOP1:		ASL A			;Shift left A-reg.
 		BIT ORB			;Test DATA-IN
-		BPL .MAKEIN		;DATA-IN is low
+		BPL MAKEIN		;DATA-IN is low
 		ORA #$01		;DATA-IN is high
-.MAKEIN		LDY #$30		;Reset CLOCK
+MAKEIN:		LDY #$30		;Reset CLOCK
 		STY ORB			;Output to RIOT
 		LDY #$38		;Set CLOCK
 		STY ORB			;Output to RIOT
 		DEX			;Decrement loop counter
-		BNE .LOOP		;End of LOOP
+		BNE LOOP1		;End of LOOP
 		AND MASK		;Mask bit
  		TAY			;Save in Y-register
- 		BEQ .END		;Return 0
+ 		BEQ DONE		;Return 0
  		LDY #$01		;Return 1
-		BNE .END		;Return to caller
+		BNE DONE		;Return to caller
 ; 		;**************************************
 ; 		; Analog input
 ; 		; If the argument is either $90 or $A0
@@ -157,7 +140,7 @@ FTBINP:		SEI			;Disable interrupt
 ; 		; Uses A-, X- and Y-registers
 		; Result in A- and Y-registers
 ; 		;**************************************
-.POTS:		LDA #$FF		;Set Count register to $FFFF
+POTS:		LDA #$FF		;Set Count register to $FFFF
 		STA T2CL
 		STA T2CH
 		LDA #%100000		;Set T2 to pulse count down
@@ -165,13 +148,13 @@ FTBINP:		SEI			;Disable interrupt
 		STX ORB			;Trigger One-shot
 		LDX #$3A		;Reset trigger
 		STX ORB			;Output to userport
-.TST		LDA T2CL		;Test timer low register
+TST:		LDA T2CL		;Test timer low register
 		LDX #$03		;Delay loop
-.DELAY		DEX
-		BNE .DELAY
+DELAY:		DEX
+		BNE DELAY
 		SEC			;Subtract timer low reg.
 		SBC T2CL		;from previous value.
-		BNE .TST		;Pulses still arriving?
+		BNE TST		;Pulses still arriving?
 		LDX #$38		;Set CLOCK, reset LOAD-IN
 		STX ORB			;Output to userport
 		SEC 			;Calculate contents
@@ -180,5 +163,5 @@ FTBINP:		SEI			;Disable interrupt
 		TAY			;in Y register
 		LDA #$FF
 		SBC T2CL		;Low byte in A reg
-.END		CLI			;Enable interrupts
+DONE:		CLI			;Enable interrupts
 		RTS			;And return to caller
