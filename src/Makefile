@@ -1,4 +1,4 @@
-target = teachin.pap simpladc.pap btntest.pap
+target = teachin.pap simpladc.pap btntest.pap motor.pap
 
 default: all
 
