@@ -1,77 +1,77 @@
 ; motor.a65 - simple motor control
 
 
-CRLF		= $1E2F
-GETCH		= $1E5A
-OUTSP		= $1E9E
-OUTCH		= $1EA0
+crlf		= $1e2f
+getch		= $1e5a
+outsp		= $1e9e
+outch		= $1ea0
 
-		.INCLUDE "FTCOMPUTING.INC"
+		.include "ftcomputing.inc"
 
-		.IMPORT FTINIT, FTBINP, FTBOUTP
+		.import _ftinit, _ftbinp, _ftboutp
 
-		.SEGMENT "ZEROPAGE"
-ID:		.RES 1
-MTR:		.RES 1
-DIR:		.RES 1
+		.segment "ZEROPAGE"
+id:		.res 1
+mtr:		.res 1
+dir:		.res 1
 
-		.SEGMENT "CODE"
+		.segment "CODE"
 
-		CLD
-		LDA #'1'
-		STA ID
-		LDA #M1
-		STA MTR
-		LDA #CW
-		STA DIR
- 		JSR FTINIT		; Initialise interface
-MAIN:		JSR CRLF
-		LDA ID
-		JSR OUTCH
-		LDA #'>'
-		JSR OUTCH
-		JSR OUTSP
-		JSR GETCH
-		CMP #'L'
-		BNE ISRIGHT
-		LDA #CCW
-		STA DIR
-		BNE MOTOR
-ISRIGHT:	CMP #'R'
-		BNE SELECT
-		LDA #CW
-		STA DIR
-		BNE MOTOR
-SELECT:		TAX
-		CLC
-		SBC #'0'-1
-		BMI MAIN
-		CMP #5
-		BCS MAIN
-		TAY
-		STX ID
-		LDA #M1
-		STA MTR
-LOOP:		DEY
-		BEQ MAIN
-		ASL MTR
-		ASL MTR
-		BNE LOOP
-MOTOR:		LDA MTR			; Get motor
-		LDX DIR			; And direction
-		JSR FTBOUTP		; And apply
-		JSR DELAY
-		LDA MTR			; Get motor
-		LDX #STOP		; Set motor off
-		JSR FTBOUTP
-		JMP MAIN
+		cld
+		lda #'1'
+		sta id
+		lda #M1
+		sta mtr
+		lda #CW
+		sta dir
+ 		jsr _ftinit		; initialise interface
+main:		jsr crlf
+		lda id
+		jsr outch
+		lda #'>'
+		jsr outch
+		jsr outsp
+		jsr getch
+		cmp #'L'
+		bne isright
+		lda #CCW
+		sta dir
+		bne motor
+isright:	cmp #'R'
+		bne select
+		lda #CW
+		sta dir
+		bne motor
+select:		tax
+		clc
+		sbc #'0'-1
+		bmi main
+		cmp #5
+		bcs main
+		tay
+		stx id
+		lda #M1
+		sta mtr
+loop:		dey
+		beq main
+		asl mtr
+		asl mtr
+		bne loop
+motor:		lda mtr			; get motor
+		ldx dir			; and direction
+		jsr _ftboutp		; and apply
+		jsr delay
+		lda mtr			; get motor
+		ldx #STOP		; set motor off
+		jsr _ftboutp
+		jmp main
 
-DELAY:		LDY #$A0
-DLY0:		LDX #$FF
-DLY1:		DEX
-        	BNE DLY1
-		DEY
-		BNE DLY0
-		RTS
+delay:		ldy #$a0
+dly0:		ldx #$ff
+dly1:		dex
+        	bne dly1
+		dey
+		bne dly0
+		rts
 
-		.END
+		.end
