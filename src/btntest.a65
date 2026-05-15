@@ -26,12 +26,13 @@ START		LDA #E8			; Start with first button
 LOOP		JSR SCANDS
 		LDX CURBTN		; Get current button no.
 		JSR FTBINP		; Check status
+		CLC
 		TYA
 		BEQ NEXT		; If 0, button not pressed
 		LDA PTR
+		ADC #1
 		STA INH
-NEXT		CLC
-		ROR CURBTN
+NEXT		ROR CURBTN
 		DEC PTR
 		BMI START
 		JMP LOOP
