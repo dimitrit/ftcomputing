@@ -3,8 +3,11 @@
 		;**************************************
 		; This driver is based on the C64 driver
 		; Control of the fischertechnik Interface
-		; using the MS-BASIC SYS- and USR-commands
-		; for output and input, respectively.
+		; using _ftboutp() and _ftbinp() for
+		; output and input, respectively.
+		; NOTE: _ftinit() must be called before
+		; attempting to read buttons or control
+		; motors.
 		;**************************************
 		; These routines require the ft interface to be
 		; connected to the PAL-2 VIA I/F as following:
@@ -24,7 +27,6 @@
 		;
 		;**************************************
 		.include "FTCOMPUTING.INC"
-
 		;**************************************
 		; Global definitions
 		;**************************************
@@ -39,6 +41,9 @@ ddrb		= $1602			;data direction reg b
 t2cl		= $1608 		;timer 2 low register
 t2ch		= $1609 		;timer 2 high register
 acr		= $160b 		;aux control register
+
+PRTBYT		= $1e3b			; print two hex characters on tty
+
 		;**************************************
 		; Variables in the zero page
 		;**************************************
@@ -59,12 +64,16 @@ _ftinit:	sei 			;disable interrupt
 		;**************************************
 		; Entry point for digital output
 		;**************************************
+		;void __fastcall__ ftboutp(unsigned char,unsigned char);
+		;**************************************
 _ftboutp:	sei			;disable interrupt
+		sta tmp1
+		jsr popa
 		sta mask		;save bit mask
 		lda avar		;get previous output
 		ora mask		;set both bits
 		sta avar		;intermediate storage
-		txa
+		lda tmp1
 		and mask		;mask motor
 		sta mask		;intermediate storage
 		lda avar		;get output variable
@@ -102,16 +111,16 @@ dout:		sta orb			;output to riot
 		; analog input
 		;**************************************
 _ftbinp:	sei			;disable interrupt
- 		cpx #$a0		;ex analog input?
+ 		cmp #EX			;ex analog input?
  		beq pots		;go to pots
- 		cpx #$90		;ey analog input?
+ 		cmp #EY			;ey analog input?
 		beq pots		;go to pots
- 		stx mask		;save input mask
+ 		sta mask		;save input mask
  		;**************************************
  		; Interface Control
  		; for digital input
  		; Uses X- and Y-registers
-		; Result in Y-register
+		; Result in A and X-register
  		;**************************************
 		lda #$32		;set load-in
 		sta orb			;output to riot
@@ -129,9 +138,9 @@ makein:		ldy #$30		;reset clock
 		dex			;decrement loop counter
 		bne loop1		;end of loop
 		and mask		;mask bit
- 		tay			;save in y-register
+ 		;tay			;save in y-register
  		beq done		;return 0
- 		ldy #$01		;return 1
+ 		lda #$01		;return 1
 		bne done		;return to caller
 ; 		;**************************************
 ; 		; Analog input
@@ -141,12 +150,12 @@ makein:		ldy #$30		;reset clock
 ; 		; Uses A-, X- and Y-registers
 		; Result in A- and Y-registers
 ; 		;**************************************
-pots:		lda #$ff		;set count register to $ffff
-		sta t2cl
-		sta t2ch
-		lda #%100000		;set t2 to pulse count down
-		sta acr
-		stx orb			;trigger one-shot
+pots:		ldx #$ff		;set count register to $ffff
+		stx t2cl
+		stx t2ch
+		ldx #%100000		;set t2 to pulse count down
+		stx acr
+		sta orb			;trigger one-shot
 		ldx #$3a		;reset trigger
 		stx orb			;output to userport
 tst:		lda t2cl		;test timer low register
@@ -155,13 +164,13 @@ delay:		dex
 		bne delay
 		sec			;subtract timer low reg.
 		sbc t2cl		;from previous value.
-		bne tst		;pulses still arriving?
+		bne tst			;pulses still arriving?
 		ldx #$38		;set clock, reset load-in
 		stx orb			;output to userport
 		sec 			;calculate contents
 		lda #$ff
 		sbc t2ch 		;high byte
-		tay			;in y register
+		tax			;in x register
 		lda #$ff
 		sbc t2cl		;low byte in a reg
 done:		cli			;enable interrupts
