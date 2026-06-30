@@ -42,8 +42,6 @@ t2cl		= $1608 		;timer 2 low register
 t2ch		= $1609 		;timer 2 high register
 acr		= $160b 		;aux control register
 
-PRTBYT		= $1e3b			; print two hex characters on tty
-
 		;**************************************
 		; Variables in the zero page
 		;**************************************
