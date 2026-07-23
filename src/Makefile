@@ -1,17 +1,20 @@
-target = motor.pap
+target = irobots.pap
 
 default: all
 
 all: $(target)
 
 %.pap: %.bin
-	srec_cat $< -Binary -offset 512 -output $@ -MOS_Technologies
+	srec_cat $< -binary -offset 0x200 -output $@ -MOS_Technologies
 
-motor.bin: motor.o viaifdrv.o
+irobots.bin: irobots.o viaifdrv.o conio.o
 	ld65 -o $@ -t kim1 $? kim1.lib
 
+irobots.s: irobots.c
+	cc65 -t kim1 $<
+
 %.o: %.s
-	ca65 -t kim1 $<
+	ca65 -t kim1 -l $(basename $<).lst $<
 
 clean:
 	@rm -f *.lst *.img *.com *.bin *.obj *.hex *.pap *.o
