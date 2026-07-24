@@ -4,8 +4,9 @@
 
 #include "ftcomputing.h"
 
-void move(unsigned char mtr, unsigned char dir);
-void delay(unsigned int count);
+void calibrate();
+void move(unsigned char idx, unsigned char btn, unsigned char dir, unsigned char step);
+void moveto(unsigned char idx, unsigned int step);
 
 typedef struct {
 	unsigned char mtr;	// motor
@@ -15,68 +16,138 @@ typedef struct {
 	unsigned int ms;	// max steps
 } motor_t;
 
+typedef struct {
+	unsigned char mtr;
+	int stp;
+} step_t;
+
 motor_t motors[4] = {
-	{M1, E2, E1, 0, 100},
-	{M2, E4, E3, 0, 100},
-	{M3, E6, E5, 0, 100},
-	{M4, E8, E7, 0, 100}
+	{M1, E2, E1, 0, 0xFF},
+	{M2, E4, E3, 0, 0xFF},
+	{M3, E6, E5, 0, 0xFF},
+	{M4, E8, E7, 0, 0xFF}
 };
 
-int main (void) {
-	unsigned char c, i;
+step_t saved[80];
 
-	ftinit();
+int main (void) {
+	unsigned char cs, c, m;
+	unsigned int s;
 
 	cputs("\n\rft Industry Robots");
 
-	for (i=0; i<4; i++){
-		cputs("\n\rCalibrating M");
-		cputc(i+'1');
-		while(ftbinp(motors[i].end) == 0) {
-			cputc('.');
-			move(motors[i].mtr, CCW);
-		}
-	}
+	ftinit();
 
-	cputs("\n\rReady!\n\r");
+	calibrate();
 
-	i = 0;
+	m = cs = 0;
 
 	while(1) {
 		c = cgetc();
-		switch (c)
-		{
+
+		switch (c) {
 		case 'L':
+			/* Turn current motor left */
 			cputc(c);
-			move(i,CCW);
+			s = motors[m].cs - 1;
+			moveto(m,s);
 			break;
 		case 'R':
+			/* Turn current motor right */
 			cputc(c);
-			move(i,CW);
+			s = motors[m].cs + 1;
+			moveto(m,s);
+			break;
+		case 'S':
+			/* Save position of current motor */
+			cputs("\n\rSaving[");
+			cputhex8(cs);
+			cputs("] M");
+			cputc(m+'1');
+			cputc('@');
+			cputhex8(motors[m].cs);
+
+			saved[cs].mtr = m;
+			saved[cs].stp = motors[m].cs;
+			cs += 1;
+			break;
+		case 'P':
+			/* Replay saved positions */
+			cputs("\n\rReplaying");
+			for (s=0; s < cs; s++) {
+				cputc('.');
+				moveto(saved[s].mtr, saved[s].stp);
+			}
+			break;
+		case 'N':
+			/* Reset all the things */
+			calibrate();
+			m = cs = 0;
 			break;
 		default:
+			/* Set current motor, if possible */
 			if (c>'0' && c <'5') {
 				cputs("\n\rUsing M");
 				cputc(c);
 				cputc(':');
-				i = motors[c-'1'].mtr;
+				m = c-'1';
 			}
 			break;
 		}
 	}
 }
 
-void move(unsigned char mtr, unsigned char dir) {
-	ftboutp(mtr, dir);
+void calibrate() {
+	int i;
 
-	delay(500);
+	for (i=0; i<4; i++){
+		cputs("\n\rCalibrating M");
+		cputc(i+'1');
+		move(i, motors[i].end, CCW, 0);
+		motors[i].cs = 0;
+		moveto(i, 1);
+	}
 
-	ftboutp(mtr, STOP);
+	cputs("\n\rReady!\n\r");
 }
 
-void delay(unsigned int count) {
-    unsigned int i;
-    for (i = 0; i < count; ++i) {
-        __asm__("nop"); // Keep loop from being optimized out
-    }
+void moveto(unsigned char idx, unsigned int step) {
+	unsigned char d;
+	int s;
+
+	if (step > motors[idx].ms) {
+		step = motors[idx].ms;
+	}
+
+	if (step > motors[idx].cs) {
+		d = CW;
+		s = 1;
+	} else {
+		d = CCW;
+		s = -1;
+	}
+	while (motors[idx].cs != step) {
+		move(idx, motors[idx].pulse, d, 1);
+		motors[idx].cs = motors[idx].cs + s;
+	}
+}
+
+void move(unsigned char idx, unsigned char btn, unsigned char dir, unsigned char step) {
+	// if (motors[idx].end == 1 && dir == CCW) {
+	// 	return;
+	// }
+
+	if (ftbinp(btn) && step) {
+		while (ftbinp(btn)) {
+			ftboutp(motors[idx].mtr, dir);
+		}
+	}
+
+	ftboutp(motors[idx].mtr, STOP);
+
+	while (!ftbinp(btn)) {
+		ftboutp(motors[idx].mtr, dir);
+	}
+
+	ftboutp(motors[idx].mtr, STOP);
 }
