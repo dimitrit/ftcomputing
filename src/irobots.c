@@ -15,6 +15,8 @@
  * The 'left' rotational direction for each of the 4 motors moves the respective axis
  * towards the start position, ie. towards to end switch. If required, swap the motor
  * connections.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
