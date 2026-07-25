@@ -1,3 +1,21 @@
+
+/*
+ * ==== KINK-ARM ROBOT --- INDUSTRY ROBOTS --- 30408 ====
+ *
+ * This program requires the motors and buttons to be connected as per the diagram
+ * on page 36 of the Industry Robots (30408) construction manual.
+ *
+ *     Motor | End Switch | Pulse Counter
+ *     ------+------------+--------------
+ *       M1  |     E1     |      E2
+ *       M2  |     E3     |      E4
+ *       M3  |     E5     |      E6
+ *       M4  |     E7     |      E8
+ *
+ * The 'left' rotational direction for each of the 4 motors moves the respective axis
+ * towards the start position, ie. towards to end switch. If required, swap the motor
+ * connections.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -34,7 +52,7 @@ int main (void) {
 	unsigned char cs, c, m;
 	unsigned int s;
 
-	cputs("\n\rft Industry Robots");
+	cputs("\n\rft Industry Robots 30408");
 
 	ftinit();
 
@@ -97,6 +115,7 @@ int main (void) {
 	}
 }
 
+/* Moves each of the 4 motors to their starting position */
 void calibrate() {
 	int i;
 
@@ -111,6 +130,7 @@ void calibrate() {
 	cputs("\n\rReady!\n\r");
 }
 
+/* Moves motor with given index to the specified step position */
 void moveto(unsigned char idx, unsigned int step) {
 	unsigned char d;
 	int s;
@@ -132,6 +152,7 @@ void moveto(unsigned char idx, unsigned int step) {
 	}
 }
 
+/* Moves the given motor until the relevant button is depressed. For steps, this is exactly one pulse */
 void move(unsigned char idx, unsigned char btn, unsigned char dir, unsigned char step) {
 	// if (motors[idx].end == 1 && dir == CCW) {
 	// 	return;
