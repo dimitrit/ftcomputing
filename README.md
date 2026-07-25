@@ -16,6 +16,8 @@ Between the mid-1980s and early 1990s fischertechnik produced computing interfac
 
 ftPAL is a simple adapter that allows the fischertechnik Universal and CVK Computing Interfaces to be connected to the PAL-1 RIOT Expansion Module or the PAL-2 Versatile Interface.[^3][^4]
 
+<img width="800" height="800" alt="Image" src="https://github.com/user-attachments/assets/7f9d44f1-f88b-4dd9-b480-6a5d7b2221ab" />
+
 The ftPAL adapter implements the same logical connections as the fischertechnik Commodore 64 adapter:[^5]
 
 | PAL VIA  | ft Interface        | Description |
