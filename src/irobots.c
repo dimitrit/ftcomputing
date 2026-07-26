@@ -25,7 +25,7 @@
 #include "ftcomputing.h"
 
 void calibrate();
-void move(unsigned char idx, unsigned char btn, unsigned char dir, unsigned char step);
+void move(unsigned char mtr, unsigned char btn, unsigned char dir);
 void moveto(unsigned char idx, unsigned int step);
 
 typedef struct {
@@ -42,10 +42,10 @@ typedef struct {
 } step_t;
 
 motor_t motors[4] = {
-	{M1, E2, E1, 0, 0xFF},
-	{M2, E4, E3, 0, 0xFF},
-	{M3, E6, E5, 0, 0xFF},
-	{M4, E8, E7, 0, 0xFF}
+	{M1, E2, E1, 0, 0x4E},
+	{M2, E4, E3, 0, 0x4E},
+	{M3, E6, E5, 0, 0x36},
+	{M4, E8, E7, 0, 0x11}
 };
 
 step_t saved[80];
@@ -124,7 +124,11 @@ void calibrate() {
 	for (i=0; i<4; i++){
 		cputs("\n\rCalibrating M");
 		cputc(i+'1');
-		move(i, motors[i].end, CCW, 0);
+
+		if (!ftbinp(motors[i].end)) {
+			move(motors[i].mtr, motors[i].end, CCW);
+		}
+
 		motors[i].cs = 0;
 		moveto(i, 1);
 	}
@@ -134,43 +138,43 @@ void calibrate() {
 
 /* Moves motor with given index to the specified step position */
 void moveto(unsigned char idx, unsigned int step) {
-	unsigned char d;
-	int s;
-
-	if (step > motors[idx].ms) {
-		step = motors[idx].ms;
-	}
+	unsigned char dir;
+	int n, incr;
 
 	if (step > motors[idx].cs) {
-		d = CW;
-		s = 1;
+		dir = CW;
+		incr = 1;
 	} else {
-		d = CCW;
-		s = -1;
+		dir = CCW;
+		incr = -1;
 	}
+
+	n = motors[idx].cs + incr;
+
+	if (n < 1 || n > motors[idx].ms) {
+		cputs("\n\rAt limit!\n\r");
+		return;
+	}
+
 	while (motors[idx].cs != step) {
-		move(idx, motors[idx].pulse, d, 1);
-		motors[idx].cs = motors[idx].cs + s;
+		move(motors[idx].mtr, motors[idx].pulse, dir);
+		motors[idx].cs = motors[idx].cs + incr;
 	}
 }
 
-/* Moves the given motor until the relevant button is depressed. For steps, this is exactly one pulse */
-void move(unsigned char idx, unsigned char btn, unsigned char dir, unsigned char step) {
-	// if (motors[idx].end == 1 && dir == CCW) {
-	// 	return;
-	// }
-
-	if (ftbinp(btn) && step) {
+/* Moves the given motor until the relevant button is depressed. For steps, this is exactly one pulse. */
+void move(unsigned char mtr, unsigned char btn, unsigned char dir) {
+	/* rotate axle if button  already depressed */
+	if (ftbinp(btn)) {
 		while (ftbinp(btn)) {
-			ftboutp(motors[idx].mtr, dir);
+			ftboutp(mtr, dir);
 		}
 	}
 
-	ftboutp(motors[idx].mtr, STOP);
-
+	/* wait for (next) button press */
 	while (!ftbinp(btn)) {
-		ftboutp(motors[idx].mtr, dir);
+		ftboutp(mtr, dir);
 	}
 
-	ftboutp(motors[idx].mtr, STOP);
+	ftboutp(mtr, STOP);
 }
