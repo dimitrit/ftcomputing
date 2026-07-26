@@ -7,10 +7,10 @@ all: $(target)
 %.pap: %.bin
 	srec_cat $< -binary -offset 0x200 -output $@ -MOS_Technologies
 
-irobots.bin: irobots.o viaifdrv.o conio.o
-	ld65 -o $@ -t kim1 $? kim1.lib
+%.bin: %.o viaifdrv.o conio.o
+	ld65 -o $@ -t kim1 $^ kim1.lib
 
-irobots.s: irobots.c
+%.s: %.c
 	cc65 -t kim1 $<
 
 %.o: %.s
