@@ -1,3 +1,6 @@
+#ifndef _FTCOMPUTING_H
+#define _FTCOMPUTING_H
+
 /**************************************/
 /* ft Interface control functions     */
 /**************************************/
@@ -30,3 +33,6 @@ extern int __fastcall__ ftbinp(unsigned char);
 
 #define EX 0b10100000
 #define EY 0b10010000
+
+/* End of ftcomputing.h */
+#endif
