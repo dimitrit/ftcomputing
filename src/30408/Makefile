@@ -1,6 +1,7 @@
 CC=cc65
 CFLAGS=-t kim1
 AS=ca65
+AFLAGS=-t kim1
 LIB_PATH=../lib
 MAKEFLAGS += -r
 
@@ -17,10 +18,10 @@ all: $(target)
 	ld65 -L$(LIB_PATH) -o $@ -t kim1 $^ ftcomputing.lib conio.lib kim1.lib 
 
 %.s: %.c
-	$(CC) -I$(LIB_PATH) $<
+	$(CC) $(CFLAGS) -I$(LIB_PATH) $<
 
 %.o: %.s
-	$(AS) -t kim1 -l $(basename $<).lst $<
+	$(AS) $(AFLAGS) -l $(basename $<).lst $<
 
 clean:
 	@rm -f *.lst *.img *.com *.bin *.obj *.hex *.pap *.o
