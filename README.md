@@ -37,18 +37,20 @@ The code in this repository requires the compilers, linkers and other tools prov
 
 While the software in this repository is specifically written for the PAL-2 with Versatile Interface expansion card, it should be relatively straigh forward to adapt it for other 6502 based systems.
 
+### GNU make
+
+As `cc65` does not support the `-c` option, `make` must be run with the `--no-builtin-rules` command line option:
+
+```
+make --no-builtin-rules
+```
+
 ### Building the applications on macOS 15 (Sequoia)
 
 Building the code on macOS may require the `CC65_HOME' environment variable to be set, for example:
 
 ```
 export CC65_HOME=/usr/local/share/cc65
-```
-
-As `cc65` does not support the `-c` option, `make` must be run with the `--no-builtin-rules` command line option:
-
-```
-make --no-builtin-rules
 ```
 
 [^1]: fischertechnik, _‘Robots, Automats and graphic units to build yourself’_, 1985, <https://docs.fischertechnikclub.nl/info2/1985.pdf> [accessed 1 September 2025]
