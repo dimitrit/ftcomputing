@@ -33,7 +33,7 @@ The ftPAL adapter implements the same logical connections as the fischertechnik 
 
 ## fischertechnik computing Software
 
-The code uses the compilers, linkers and other tools provided by the cc65 cross development package.[^6]
+The code in this repository requires the compilers, linkers and other tools provided by the cc65 cross development package.[^6] Note that the cc65 environment *must* include runtime library support for the KIM-1 system.
 
 While the software in this repository is specifically written for the PAL-2 with Versatile Interface expansion card, it should be relatively straigh forward to adapt it for other 6502 based systems.
 
@@ -45,12 +45,11 @@ Building the code on macOS may require the `CC65_HOME' environment variable to b
 export CC65_HOME=/usr/local/share/cc65
 ```
 
-Additionally, `make` must be run with the `--no-builtin-rules` command line option:
+As `cc65` does not support the `-c` option, `make` must be run with the `--no-builtin-rules` command line option:
 
 ```
 make --no-builtin-rules
 ```
-
 
 [^1]: fischertechnik, _‘Robots, Automats and graphic units to build yourself’_, 1985, <https://docs.fischertechnikclub.nl/info2/1985.pdf> [accessed 1 September 2025]
 [^2]: fischertechnik, _‘Computing Interface’_, N.D., <https://docs.fischertechnikclub.nl/computing/39484.pdf> [accessed 30 August 2025].
