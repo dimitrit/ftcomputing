@@ -6,8 +6,13 @@
 /**************************************/
 
 extern void __fastcall__ ftinit();
-extern void __fastcall__ ftboutp(unsigned char,unsigned char);
-extern int __fastcall__ ftbinp(unsigned char);
+/* initialises the VIA port and turns off all motors */
+
+extern void __fastcall__ ftboutp(unsigned char mtr, unsigned char dir);
+/* sets motor motor to specified direction (CW, CCW, or STOP) */
+
+extern int __fastcall__ ftbinp(unsigned char inp);
+/* returns value from specified input, either 0 or 1 for buttons, or value for pots */
 
 /**************************************/
 /* ft Interface control constants     */
