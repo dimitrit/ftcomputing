@@ -33,10 +33,28 @@ The ftPAL adapter implements the same logical connections as the fischertechnik 
 
 ## fischertechnik computing Software
 
+The code uses the compilers, linkers and other tools provided by the cc65 cross development package.[^6]
+
 While the software in this repository is specifically written for the PAL-2 with Versatile Interface expansion card, it should be relatively straigh forward to adapt it for other 6502 based systems.
+
+### Building the applications on macOS 15 (Sequoia)
+
+Building the code on macOS may require the `CC65_HOME' environment variable to be set, for example:
+
+```
+export CC65_HOME=/usr/local/share/cc65
+```
+
+Additionally, `make` must be run with the `--no-builtin-rules` command line option:
+
+```
+make --no-builtin-rules
+```
+
 
 [^1]: fischertechnik, _‘Robots, Automats and graphic units to build yourself’_, 1985, <https://docs.fischertechnikclub.nl/info2/1985.pdf> [accessed 1 September 2025]
 [^2]: fischertechnik, _‘Computing Interface’_, N.D., <https://docs.fischertechnikclub.nl/computing/39484.pdf> [accessed 30 August 2025].
 [^3]: Liu Ganning, _‘RIOT EXPANSION’_, 2021, <http://pal.aibs.ws/assets/RIOT_expansion_manual.pdf> [accessed 26 January 2024].
 [^4]: Dimitri Theulings, _PAL-2 Versatile Interface_, 2026
 [^5]: R Trapp, _‘ft66843 Schematic’_, 2017, <https://ftcommunity.de/knowhow/computing/computing_interfaces/ft66843_schematic.pdf> [accessed 30 August 2025].
+[^6]: Ullrich von Bassewitz and others, _cc65, the 6502 C compiler, 2026, <https://cc65.github.io/> [accessed 30 July 2026]
