@@ -25,8 +25,13 @@
 #include "ftcomputing.h"
 
 void calibrate();
-void move(unsigned char mtr, unsigned char btn, unsigned char dir);
+/* calibrates the robot arm by moving all motors to their initial position */
+
+void move(unsigned char mtr, unsigned char dir, unsigned char btn);
+/* Moves the motor in the given direction until the button is pressed */
+
 void moveto(unsigned char idx, unsigned int step);
+/* Move the motor with the given index to the step position */
 
 typedef struct {
 	unsigned char mtr;	// motor
@@ -126,7 +131,7 @@ void calibrate() {
 		cputc(i+'1');
 
 		if (!ftbinp(motors[i].end)) {
-			move(motors[i].mtr, motors[i].end, CCW);
+			move(motors[i].mtr, CCW, motors[i].end);
 		}
 
 		motors[i].cs = 0;
@@ -163,7 +168,7 @@ void moveto(unsigned char idx, unsigned int step) {
 }
 
 /* Moves the given motor until the relevant button is depressed. For steps, this is exactly one pulse. */
-void move(unsigned char mtr, unsigned char btn, unsigned char dir) {
+void move(unsigned char mtr, unsigned char dir, unsigned char btn) {
 	/* rotate axle if button  already depressed */
 	if (ftbinp(btn)) {
 		while (ftbinp(btn)) {
