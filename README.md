@@ -35,15 +35,7 @@ The ftPAL adapter implements the same logical connections as the fischertechnik 
 
 The code in this repository requires the compilers, linkers and other tools provided by the cc65 cross development package.[^6] Note that the cc65 environment *must* include runtime library support for the KIM-1 system.
 
-While the software in this repository is specifically written for the PAL-2 with Versatile Interface expansion card, it should be relatively straigh forward to adapt it for other 6502 based systems.
-
-### GNU make
-
-As `cc65` does not support the `-c` option, `make` must be run with the `--no-builtin-rules` command line option:
-
-```
-make --no-builtin-rules
-```
+While the software in this repository is specifically written for the PAL-2 with Versatile Interface expansion card, it should be relatively straight forward to port it to other 6502 based systems.
 
 ### Building the applications on macOS 15 (Sequoia)
 
