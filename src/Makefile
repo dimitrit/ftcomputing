@@ -1,23 +1,14 @@
-target = irobots.pap
+DIRS := lib diag 30408
 
-default: all
+define DIR_make
+( cd $(1) && make $@ ) ;
+endef
 
-all: $(target)
+all:
+	$(foreach dir,$(DIRS),$(call DIR_make,$(dir)))
 
-%.pap: %.bin
-	srec_cat $< -binary -offset 0x200 -output $@ -MOS_Technologies
-
-%.bin: %.o viaifdrv.o conio.o
-	ld65 -o $@ -t kim1 $^ kim1.lib
-
-%.s: %.c
-	cc65 -t kim1 $<
-
-%.o: %.s
-	ca65 -t kim1 -l $(basename $<).lst $<
 
 clean:
-	@rm -f *.lst *.img *.com *.bin *.obj *.hex *.pap *.o
+	$(foreach dir,$(DIRS),$(call DIR_make,$(dir)))
 
-.PHONY: clean debug test
-.PRECIOUS: %.hex %.bin %.pap
+.PHONY: all clean
