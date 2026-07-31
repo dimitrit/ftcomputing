@@ -2,8 +2,8 @@
 
 The fischertechnik Computing range, which was available from the mid 1980s until
 the early 2000s included the fischertechnik Computing interface, construction sets
- and software. This repository includes example code for some these construction
- sets.
+and software. This repository includes example applications for some these
+constructionsets.
 
 # fischertechnik computing interface
 
