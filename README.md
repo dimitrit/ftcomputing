@@ -1,8 +1,15 @@
+# fischertechnik Computing
+
+The fischertechnik Computing range, which was available from the mid 1980s until
+the early 2000s included the fischertechnik Computing interface, construction sets
+ and software. This repository includes example code for some these construction
+ sets.
+
 # fischertechnik computing interface
 
-The fischertechnik computing interface allows technical models to be controlled by a computer.[^1]
-
-fischertechnik computing includes the fischertechnik computing kit, the fischertechnik computing construction sets, the fischertechnik computing interfaces and software.
+From the mid-1980s to the early 1990s fischertechnik produced interfaces for
+computers from a range of manufacturers (including Apple, Commodore and Schneider)
+to allow technical models to be controlled by a computer.[^1]
 
 The fischertechnik interface provides the following functions:[^2]
 
@@ -12,9 +19,14 @@ The fischertechnik interface provides the following functions:[^2]
 
 ## Connecting the Interface
 
-Between the mid-1980s and early 1990s fischertechnik produced computing interfaces for a range of computer systems, including Apple, Commodore and Schneider. In addition to these dedicated interfaces, fischertechnik also released universal interfaces. While dedicated interfaces could be plugged in to the respective computers directly, the fischertechnik Universal and CVK Computing Interfaces required adapters between the interface connector and target computer systems.
+In addition to interfaces for specific computers, fischertechnik also released
+the fischertechnik Universal and CVK Computing Interfaces. These 'generic' interfaces
+supported a wider range of systems by means of a small adapter between the computing
+interface and target computer system.
 
-ftPAL is a simple adapter that allows the fischertechnik Universal and CVK Computing Interfaces to be connected to the PAL-1 RIOT Expansion Module or the PAL-2 Versatile Interface.[^3][^4]
+ftPAL is a simple adapter that allows the fischertechnik Universal and CVK Computing
+Interfaces to be connected to the PAL-1 RIOT Expansion Module or the PAL-2 Versatile
+Interface.[^3][^4]
 
 The ftPAL adapter implements the same logical connections as the fischertechnik Commodore 64 adapter:[^5]
 
@@ -31,7 +43,11 @@ The ftPAL adapter implements the same logical connections as the fischertechnik 
 
 <sup>*</sup>The software in this repository expects the `C64` to be jumper to be installed in `Data Input Select`
 
-## fischertechnik computing Software
+### PAL-2 Versatile Interface Configuration
+
+The ftcomputing library requires the PAL-2 Versatile Interface address select jumper to be set to 16XX.
+
+## fischertechnik Computing Software
 
 The code in this repository requires the compilers, linkers and other tools provided by the cc65 cross development package.[^6] Note that the cc65 environment *must* include runtime library support for the KIM-1 system.
 
