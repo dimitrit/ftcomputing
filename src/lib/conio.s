@@ -1,3 +1,6 @@
+
+esc		= $1b
+
 ;**************************************
 ; KIM ROM routines
 ;**************************************
@@ -6,23 +9,26 @@ outch		= $1ea0			; print ascii character on tty
 prtbyt		= $1e3b			; print two hex characters on tty
 
 .export _cgetc, _cputc, _cputs, _cputhex8
+.export _gotoxy, _revers, _clrscr
+.import popa, pusha
 .importzp ptr1
 
 .segment "CODE"
 
-; read a character from tty (blocking)
+; Return a character from the tty. If there is no character available,
+; the function waits until the user does press a key.
 .proc _cgetc
 		jsr	getch		; get character from tty
 		and     #$7f		; clear top bit
 		rts			; and done
 .endproc
 
-; output a character to tty
+; Output one character at the current cursor position
 .proc _cputc
-		jsr	outch		; output character to tty
-		rts
+		jmp	outch		; output character to tty
 .endproc
 
+; Output a NULL-terminated string at the current cursor position
 .proc _cputs
 		sta     ptr1            ; save s
         	stx     ptr1+1
@@ -40,6 +46,67 @@ done:		rts
 
 ; output a char as two hex
 .proc _cputhex8
-		jsr 	prtbyt		; output char as hex to tty
+		jmp 	prtbyt
+.endproc
+
+; Enable/disable reverse character display. This may not be supported by
+; the output device.
+.proc _revers
+		ldy	#'0'		; default to reverse off
+		sty	reverse+2
+		cmp	#0
+		beq	output
+		lda	#'7'		; reverse on
+		sta	reverse+2
+output:		lda	#<reverse
+		ldx	#>reverse
+		jsr	_cputs
+		rts
+reverse:	.byte	esc,"[7m",0
+.endproc
+
+; Set the cursor to the specified position
+.proc _gotoxy
+		pha
+		lda	#esc
+		jsr	outch
+		lda	#'['
+		jsr	outch
+		pla
+		jsr	tobcd
+		jsr	prtbyt
+		lda	#';'
+		jsr	outch
+		jsr	popa
+		jsr	tobcd
+		jsr	prtbyt
+		lda	#'H'
+		jmp	outch
+.endproc
+
+; Clear the whole screen and put the cursor into the top left corner
+.proc _clrscr
+		lda	#<clearscreen
+		ldx	#>clearscreen
+		jsr	_cputs
+		lda	#0
+		jsr	pusha
+		lda	#0
+		beq	_gotoxy
+clearscreen:	.byte 	esc,"[2J",0
+.endproc
+
+; Converts a hex value 0-0x63 to BCD 0-99
+.proc tobcd
+		sta	ptr1
+		lda	#0
+loop:
+		ldx	#$F8         ; SED instruction (opcode $F8)
+		asl	ptr1
+		sta	ptr1+1
+		adc	ptr1+1
+		inx
+		bne	loop+1
+		cld
 		rts
 .endproc
