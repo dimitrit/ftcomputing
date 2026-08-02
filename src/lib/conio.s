@@ -1,5 +1,9 @@
 
-esc		= $1b
+
+.export _cgetc, _cputc, _cputs, _cputhex8
+.export _kbhit, _gotoxy, _revers, _clrscr
+.import popa, pusha
+.importzp ptr1
 
 ;**************************************
 ; KIM ROM routines
@@ -8,12 +12,37 @@ getch		= $1e5a			; get ascii character from tty
 outch		= $1ea0			; print ascii character on tty
 prtbyt		= $1e3b			; print two hex characters on tty
 
-.export _cgetc, _cputc, _cputs, _cputhex8
-.export _gotoxy, _revers, _clrscr
-.import popa, pusha
-.importzp ptr1
+;**************************************
+; KIM hardware registers
+;**************************************
+sad		= $1740			; 6530 A data
+sbd		= $1742			; 6530 B data
+
+;**************************************
+; Misc
+;**************************************
+esc		= $1b
 
 .segment "CODE"
+
+; Return the character code if a character is waiting on the tty,
+; return false if not.
+.proc _kbhit
+		lda	sad		; check for data on tty
+		bmi	nokey
+		lda	sbd
+		and	#$fe		; set PB0 to U26 low to suppress echo
+		sta	sbd
+		jsr	getch
+		pha
+		lda	sbd
+		ora	#1		; raise PB0 to U26 to enable echo
+		sta	sbd
+		pla
+		rts
+nokey:		lda	#0		; return NULL
+		rts
+.endproc
 
 ; Return a character from the tty. If there is no character available,
 ; the function waits until the user does press a key.
