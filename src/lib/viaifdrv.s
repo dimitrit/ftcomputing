@@ -87,17 +87,17 @@ ftstvar:	sta avar		;save for output
 		lda #$3f		;set data direction
 		sta ddrb		;store in register
 		ldx #$08		;loop for 8 bits
-loop0:		lda #$30		;static pattern riot
+loop0:		lda #$30		;static pattern via
 		asl avar 		;test output bit
 		bcc dout		;data-out low
 		ora #$04		;data-out high
-dout:		sta orb			;output to riot
+dout:		sta orb			;output to via
 		ora #$08		;set clock
-		sta orb			;output to riot
+		sta orb			;output to via
 		dex			;loop counter
 		bne loop0		;end of loop
 		lda #$39		;set load-out
-		sta orb			;output to riot
+		sta orb			;output to via
 		sty avar		;restore avar
 		cli			;enable interrupt
 		rts			;return to caller
@@ -121,18 +121,18 @@ _ftbinp:	sei			;disable interrupt
 		; Result in A and X-register
  		;**************************************
 		lda #$32		;set load-in
-		sta orb			;output to riot
+		sta orb			;output to via
 		ora #$08		;set clock
-		sta orb			;output to riot
+		sta orb			;output to via
 		ldx #$08		;loop counter for 8 bit
 loop1:		asl a			;shift left a-reg.
 		bit orb			;test data-in
 		bpl makein		;data-in is low
 		ora #$01		;data-in is high
 makein:		ldy #$30		;reset clock
-		sty orb			;output to riot
+		sty orb			;output to via
 		ldy #$38		;set clock
-		sty orb			;output to riot
+		sty orb			;output to via
 		dex			;decrement loop counter
 		bne loop1		;end of loop
 		and mask		;mask bit

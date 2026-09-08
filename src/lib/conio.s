@@ -1,9 +1,9 @@
 
 
-.export _cgetc, _cputc, _cputs, _cputhex8
+.export _cgetc, _cgets, _cputc, _cputs, _cputhex8
 .export _kbhit, _gotoxy, _revers, _clrscr
-.import popa, pusha
-.importzp ptr1
+.import popa, popax, pusha
+.importzp ptr1, tmp1, tmp2
 
 ;**************************************
 ; KIM ROM routines
@@ -50,6 +50,34 @@ nokey:		lda	#0		; return NULL
 		jsr	getch		; get character from tty
 		and     #$7f		; clear top bit
 		rts			; and done
+.endproc
+
+; Get a string of characters directly from the console. The function
+; returns when size - 1 characters or either CR/LF are read.
+; char* __fastcall__ cgets (char* buffer, int size);
+.proc _cgets
+		sta	tmp1		; store max size of input
+                jsr     popax           ; get pointer to result string
+                sta     ptr1            ; and save
+                stx     ptr1+1
+		lda	#0		; clear buffer index pointer
+		sta	tmp2
+loop:		jsr	getch		; get character
+		ldy	tmp2		; get buffer index pointer
+		cmp	#$0a		; is it a newline
+		beq	done		; yes, done
+		cmp	#$0d		; is it a carriage return
+		beq	done		; yes, done
+		sta	(ptr1),y	; and save character
+		inc	tmp2		; increase index pointer
+		lda	tmp1		; get max length
+		cmp	tmp2		; and compare with current index
+		bne	loop		; not yet at max length
+done:		lda	#0		; terminate string with NUL
+		sta	(ptr1),y
+                lda     ptr1            ; point to start of buffer
+                ldx     ptr1+1
+		rts			; all done!
 .endproc
 
 ; Output one character at the current cursor position
